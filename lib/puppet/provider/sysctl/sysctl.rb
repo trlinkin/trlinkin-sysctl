@@ -29,20 +29,11 @@ Puppet::Type.type(:sysctl).provide(:sysctl,:parent => Puppet::Provider::ParsedFi
                   raise ArgumentError, "#{key} is a require attribut for sysctl" unless hash[key] and hash[key] != absent
                 end
 
-                # BSD and Linux/Darwin have a different style for their sysctl.conf entries
-                os = Facter.value(:operatingsystem)
-                case
-                when os =~ /bsd/i
-                  delim = ": "
-                else
-                  delim = " = "
-                end
-
-                str = ""
+                str = String.new
                 if hash.include?(:comment) and !hash[:comment].empty?
                   str = "##{hash[:comment]}\n"
                 end
-                str += "#{hash[:param:]}#{delim}#{hash[:value]}"
+                str += "#{hash[:param:]} = #{hash[:value]}"
                 str
               }
 
