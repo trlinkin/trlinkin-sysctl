@@ -1,6 +1,5 @@
 module Puppet
   newtype(:sysctl) do
-    ensurable
 
     @doc = "Manages sysctl volues. This module will ensure the value of
       kernel settings in the sysctl configuration. It can also remove
@@ -13,17 +12,20 @@ module Puppet
       settings of your kernel, possibly durring runtime!. It is not the 
       fault of this type if you use it to make poorly researched desicions."
 
-#    feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
-#      :methods => [:sysctlparam?, :sysctlparam=]
 
-#    newproperty(:enable, :required_features => :changesysctl) do
-#      desc "Set paramter of running system if it differs."
-#
-#      newvalue(:true)
-#      newValue(:false)
+    ensurable
 
-      #defaultto :false
-#    end
+    feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
+      :methods => [:sysctlparam?, :sysctlparam=]
+
+    newproperty(:enable, :required_features => :changesysctl) do
+      desc "Set paramter of running system if it differs."
+
+      newvalue (:true)
+      newValue (:false)
+
+      defaultto (:false)
+    end
 
     newproperty(:target) do
       desc "The file in which to store sysctl information. Only used when 

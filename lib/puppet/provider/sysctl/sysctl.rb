@@ -54,9 +54,8 @@ Puppet::Type.type(:sysctl).provide(:sysctl,:parent => Puppet::Provider::ParsedFi
     end
 
     def getvalue(param)
-      if getparam(param)
-
-      end
+      return result[2] if result = getparam(param)
+      nil
     end
 
 end
