@@ -13,19 +13,44 @@ module Puppet
       fault of this type if you use it to make poorly researched desicions."
 
 
-    ensurable
+    ensurable #do
+    #   puts "#{self}"
+    #   def retrieve
+    #     self.fail("Cannot find kernel paramter on system.") if not provider.isparam?(resource[:name])
+    #     super
+    #   end
+    # end
 
-    feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
-      :methods => [:sysctlparam?, :sysctlparam=]
+    # feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
+    #   :methods => [:sysctlparam?, :sysctlparam=]
 
-    newproperty(:enable, :required_features => :changesysctl) do
-      desc "Set paramter of running system if it differs."
+    # newproperty(:activate, :required_features => :changesysctl) do
+    #   desc "Set paramter of running system if it differs."
 
-      newvalue (:true)
-      newValue (:false)
+    #   newvalue (:yes)
 
-      defaultto (:false)
+    #   defaultto (:false)
+    # end
+
+    newparam(:name) do
+      desc "Name of the kernel parameter."
+
+      isnamevar
+
+      validate do |value|
+        unless value =~ /^[\w\d_\.\-]+$/ 
+          raise ArgumentError, "Kernel parameter formatting is not valid."
+        end
+      end
     end
+
+    newproperty(:val) do
+      desc "Value of the kernel parameter."
+    end
+
+    #newproperty(:comment) do
+    #  desc "A comment that will be placed above the line with a # character."
+    #end
 
     newproperty(:target) do
       desc "The file in which to store sysctl information. Only used when 
@@ -40,28 +65,9 @@ module Puppet
         end
       }
     end
-
-    newproperty(:comment) do
-      desc "A comment that will be placed above the line with a # character."
-    end
-
-    newparam(:param, :namevar => true) do
-      desc "Name of the kernel parameter."
-
-      validate do |value|
-        unless value =~ /^[\w\d_\.]+$/ 
-          raise ArgumentError, "Kernel parameter formatting is not valid."
-        end
-      end
-    end
-
-    newparam(:value) do
-      desc "Value of the kernel parameter."
-    end
     
     autorequire(:file) do
       ["/etc/sysctl.conf"]
     end
   end
 end
-
