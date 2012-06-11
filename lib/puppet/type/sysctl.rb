@@ -13,13 +13,13 @@ module Puppet
       fault of this type if you use it to make poorly researched desicions."
 
 
-    ensurable #do
-    #   puts "#{self}"
-    #   def retrieve
-    #     self.fail("Cannot find kernel paramter on system.") if not provider.isparam?(resource[:name])
-    #     super
-    #   end
-    # end
+    ensurable do
+      self.defaultvalues
+      def retrieve
+        self.fail("Cannot find kernel paramter '#{resource[:name]}' on system.") if not provider.isparam?(resource[:name])
+        super
+      end
+    end
 
     # feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
     #   :methods => [:sysctlparam?, :sysctlparam=]

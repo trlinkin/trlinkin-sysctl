@@ -25,15 +25,14 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
 
 
     def getparam(param)
-      #if cmd = Puppet::Util::which('sysctl')
-        puts "Doing lookup"
-        IO.popen("/sbin/sysctl -a") do |list|
+      if cmd = Puppet::Util::which('sysctl')
+        IO.popen(cmd+" -a") do |list|
           list.each do |line|
             result = line.split(/^([\w\d_\.\-]+)[\s=:]+(\S+)$/)
             return result if result[1] == param
           end
         end
-      #end
+      end
       nil
     end
 
