@@ -51,7 +51,7 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
       arg = '-w' unless Facter.value(:operatingsystem) =~ /bsd/i
 
       begin
-        cmd = [arg,@resource[:name],value]
+        cmd = [arg,"#{@resource[:name]}=#{value}"]
         output = sysctl(cmd)
       rescue Puppet::ExecutionFailure
         raise Puppet::Error, "Could not set #{@resource[:name]} to #{value}"
