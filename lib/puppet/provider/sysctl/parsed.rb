@@ -5,7 +5,7 @@ sysctl_conf = "/etc/sysctl.conf"
 Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFile,
   :default_target => sysctl_conf,:filetype => :flat) do
 
-  #confine :exists => sysctl_conf  # Not sure if confining to this file is smart, by default, mac has one that is .default
+  #confine :exists => sysctl_conf  # Not sure if confining to this file is smart, by default, mac has one that is ".default"
   commands :sysctl => "sysctl"
 
 
@@ -16,7 +16,7 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
 
   # define our record line so that the sysctl may be parsed
   record_line :parsed,
-              :fields => %w{name val},
+              :fields => %w{name value},
               #:optional => %{comment},
               #:match => /^([\w\d_\.\-]+)[\s=:]+(\S+)?$/,
               #:match => /(^\s+#.*)?\n^([\w\d_\.]+)[\s=:]+(\S+)$/,
@@ -41,10 +41,24 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
     end
 
     def getvalue(param)
-      return result[2] if result = getparam(param)
-      nil
+      (result = getparam(param)) ? result[2] : nil
+    end
+
+    def enable=(value)
+
+      # BSD and Linux/Darwin have a different argument for their sysctl command
+      arg = String.new
+      arg = '-w' unless Facter.value(:operatingsystem) =~ /bsd/i
+
+      begin
+        cmd = [arg,@resource[:name],value]
+        output = sysctl(cmd)
+      rescue Puppet::ExecutionFailure
+        raise Puppet::Error, "Could not set #{@resource[:name]} to #{value}"
+      end
     end
 
 end
 
 # @resource.fail
+# rescue Puppet::ExecutionFailure

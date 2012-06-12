@@ -21,17 +21,6 @@ module Puppet
       end
     end
 
-    # feature :changesysctl, "The provider needs to modify the running kernel paramter values.",
-    #   :methods => [:sysctlparam?, :sysctlparam=]
-
-    # newproperty(:activate, :required_features => :changesysctl) do
-    #   desc "Set paramter of running system if it differs."
-
-    #   newvalue (:yes)
-
-    #   defaultto (:false)
-    # end
-
     newparam(:name) do
       desc "Name of the kernel parameter."
 
@@ -44,7 +33,7 @@ module Puppet
       end
     end
 
-    newproperty(:val) do
+    newproperty(:value) do
       desc "Value of the kernel parameter."
     end
 
@@ -64,6 +53,33 @@ module Puppet
           nil
         end
       }
+    end
+
+    newproperty(:enable) do
+      desc "Enable new Kernel paramter value on running system."
+
+      newvalue(:true)
+
+      newvalue(:false)
+
+      defaultto :false
+
+      def retrieve
+        self.fail("Cannot find kernel paramter '#{resource[:name]}' on system.") if not provider.isparam?(resource[:name])
+        provider.getvalue(resource[:name])
+      end
+
+      def insync?(is)
+        return true if should == :false
+
+        def self.validate(value)
+          return
+        end
+
+        resource[:enable] = resource[:value] if should == :true
+        puts should
+        super        
+      end
     end
     
     autorequire(:file) do
