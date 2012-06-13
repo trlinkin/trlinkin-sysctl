@@ -1,7 +1,7 @@
 module Puppet
   newtype(:sysctl) do
 
-    @doc = "Manages sysctl volues. This module will ensure the value of
+    @doc = "Manages sysctl values. This module will ensure the value of
       kernel settings in the sysctl configuration. It can also remove
       values so that they fall back on the system defaults. This module
       will optionally ensure that the value specified is the current 
@@ -9,14 +9,14 @@ module Puppet
       idea. 
 
       As a general warning, please be aware you're messing with internal 
-      settings of your kernel, possibly durring runtime!. It is not the 
-      fault of this type if you use it to make poorly researched desicions."
+      settings of your kernel, possibly during runtime! It is not the 
+      fault of this type if you use it to make poorly researched decisions."
 
 
     ensurable do
       self.defaultvalues
       def retrieve
-        self.fail("Cannot find kernel paramter '#{resource[:name]}' on system.") if not provider.isparam?(resource[:name])
+        provider.isparam?(resource[:name])
         super
       end
     end
@@ -28,23 +28,19 @@ module Puppet
 
       validate do |value|
         unless value =~ /^[\w\d_\.\-]+$/ 
-          raise ArgumentError, "Kernel parameter formatting is not valid."
+          raise ArgumentError, "kernel parameter formatting is not valid."
         end
       end
     end
 
     newproperty(:value) do
-      desc "Value of the kernel parameter."
+      desc "Value the kernel parameter should be set to."
     end
-
-    #newproperty(:comment) do
-    #  desc "A comment that will be placed above the line with a # character."
-    #end
 
     newproperty(:target) do
       desc "The file in which to store sysctl information. Only used when 
         saving changes to disk. Defaults to `/etc/sysctl.conf`. Some newer
-        distrobutions of Linux now support a `sysctl.d` directory."
+        distribution of Linux now support a `sysctl.d` directory."
 
       defaultto { 
         if @resource.class.defaultprovider.ancestors.include?(Puppet::Provider::ParsedFile)
@@ -56,29 +52,32 @@ module Puppet
     end
 
     newproperty(:enable) do
-      desc "Enable new Kernel paramter value on running system."
+      desc "Enable new Kernel parameter value on running system."
 
+      # since puppet is a declarative language, it makes sense to allow this property to be set 
+      # to 'false' so users can be very explicit with their resource declarations
       newvalue(:true)
-
       newvalue(:false)
-
       defaultto :false
 
       def retrieve
-        self.fail("Cannot find kernel paramter '#{resource[:name]}' on system.") if not provider.isparam?(resource[:name])
+        provider.isparam?(resource[:name])
         provider.getvalue(resource[:name])
       end
 
       def insync?(is)
         return true if should == :false
 
-        def self.validate(value)
-          return
-        end
+        # here we disable the validation to allow us to set our @should to that of the value property
+        def self.validate(value); end
 
-        resource[:enable] = resource[:value] if should == :true
-        puts should
+        # ... and here we set the value
+        resource[:enable] = resource.should(:value) if should == :true
         super        
+      end
+
+      def change_to_s(current_value, newvalue)
+        return "modified running value of '#{resource[:name]}' from #{self.class.format_value_for_display is_to_s(current_value)} to #{self.class.format_value_for_display should_to_s(newvalue)}"
       end
     end
     
