@@ -16,8 +16,24 @@ module Puppet
     ensurable do
       self.defaultvalues
       def retrieve
+        # This check is here since the provider won't be associated with the type 
+        # when it first is validating the input variables.
         provider.isparam?(resource[:name])
         super
+      end
+
+      def sync
+        event = super()
+
+        # This is a hack taken from the Service type. There are plans that one
+        # day may make this uneccessary. For now, it ensures that the enable 
+        # property is kept in sync even when the ensure resource is not in sync.
+        if property = resource.property(:enable)
+          val = property.retrieve
+          property.sync unless property.safe_insync?(val)
+        end
+
+        event
       end
     end
 
@@ -61,17 +77,18 @@ module Puppet
       defaultto :false
 
       def retrieve
-        provider.isparam?(resource[:name])
         provider.getvalue(resource[:name])
       end
 
       def insync?(is)
         return true if should == :false
 
-        # here we disable the validation to allow us to set our @should to that of the value property
-        def self.validate(value); end
+        # Here we disable the validation to allow us to set our @should to that of the value property.
+        # The reason I'm overriding this function is because the original user provided value has already
+        # been validated. The value of the :value parameter is left to the user to provied a safe value.
+        def self.validate(value); true; end
 
-        # ... and here we set the value
+        # ... and here we set the value.
         resource[:enable] = resource.should(:value) if should == :true
         super        
       end
