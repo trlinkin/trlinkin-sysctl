@@ -37,20 +37,19 @@ module Puppet
       end
     end
 
-    newparam(:name) do
+    newparam(:name, :call => :after) do
       desc "Name of the kernel parameter."
 
       isnamevar
+
+
 
       validate do |value|
         unless value =~ /^[\w\d_\.\-]+$/ 
           raise ArgumentError, "kernel parameter formatting is not valid."
         end
+        #@resource.provider.isparam?(value)
       end
-    end
-
-    newproperty(:value) do
-      desc "Value the kernel parameter should be set to."
     end
 
     newproperty(:target) do
@@ -65,6 +64,10 @@ module Puppet
           nil
         end
       }
+    end
+
+    newproperty(:value) do
+      desc "Value the kernel parameter should be set to."
     end
 
     newproperty(:enable) do
@@ -84,12 +87,13 @@ module Puppet
         return true if should == :false
 
         # Here we disable the validation to allow us to set our @should to that of the value property.
-        # The reason I'm overriding this function is because the original user provided value has already
-        # been validated. The value of the :value parameter is left to the user to provied a safe value.
-        def self.validate(value); true; end
+        # To disable validation we add a new acceptable value that matches everything. At this point, 
+        # user input to this property has passed the first round of validation. The :value peoperty has
+        # no validation, and this allows us to accept the value from it.
+        self.class.newvalue(/.*/)
 
-        # ... and here we set the value.
-        resource[:enable] = resource.should(:value) if should == :true
+        # ... and here we set the value. 
+        resource[:enable] = resource.property(:value).should if should == :true
         super        
       end
 
@@ -101,5 +105,6 @@ module Puppet
     autorequire(:file) do
       ["/etc/sysctl.conf"]
     end
+
   end
 end
