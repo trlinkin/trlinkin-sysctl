@@ -3,11 +3,11 @@ $LOAD_PATH.unshift File.join(dir, 'lib')
 
 require 'mocha'
 require 'puppet'
-require 'rspec'
-require 'spec/autorun'
+gem 'rspec', '>=2.0.0'
+require 'rspec/expectations'
 
-Spec::Runner.configure do |config|
-    config.mock_with :mocha
+RSpec.configure do |config|
+  config.mock_with :mocha
 end
 
 # We need this because the RAL uses 'should' as a method.  This

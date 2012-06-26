@@ -8,26 +8,34 @@ module Puppet
       running value in the system. Naturally, this is not always a great
       idea. 
 
-      As a general warning, please be aware you're messing with internal 
+      As a general warning, please be aware you are modifying the internal 
       settings of your kernel, possibly during runtime! It is not the 
       fault of this type if you use it to make poorly researched decisions."
 
 
     ensurable do
       self.defaultvalues
-      def retrieve
-        # This check is here since the provider won't be associated with the type 
-        # when it first is validating the input variables.
-        provider.isparam?(resource[:name])
-        super
+
+      # This is a compromise. We're checking the name parameter with the system here
+      # because the default provider is not set until after the name parameter
+      # processes its value. We only want to validate with the running system if we're 
+      # applying running values, or ensuring present. I don't see why we should not be 
+      # able to ensure absent a value that is invalid on the system, it may come in handy
+      # some day.
+      validate do |value|
+        valid = super(value)
+        provider.isparam?(resource[:name]) if value.to_s == 'present' || resource[:enable].to_s == 'true'
+
+        valid
       end
 
       def sync
         event = super()
 
         # This is a hack taken from the Service type. There are plans that one
-        # day may make this uneccessary. For now, it ensures that the enable 
+        # day may make this unnecessary. For now, it ensures that the enable 
         # property is kept in sync even when the ensure resource is not in sync.
+        # The current drawback is that the event will not be reported.
         if property = resource.property(:enable)
           val = property.retrieve
           property.sync unless property.safe_insync?(val)
@@ -37,18 +45,15 @@ module Puppet
       end
     end
 
-    newparam(:name, :call => :after) do
+    newparam(:name) do
       desc "Name of the kernel parameter."
 
       isnamevar
-
-
 
       validate do |value|
         unless value =~ /^[\w\d_\.\-]+$/ 
           raise ArgumentError, "kernel parameter formatting is not valid."
         end
-        #@resource.provider.isparam?(value)
       end
     end
 
@@ -68,6 +73,8 @@ module Puppet
 
     newproperty(:value) do
       desc "Value the kernel parameter should be set to."
+
+      defaultto 0
     end
 
     newproperty(:enable) do
@@ -75,9 +82,15 @@ module Puppet
 
       # since puppet is a declarative language, it makes sense to allow this property to be set 
       # to 'false' so users can be very explicit with their resource declarations
-      newvalue(:true)
-      newvalue(:false)
+      newvalue (:true)
+      newvalue (:false)
+
       defaultto :false
+
+      munge do |value|
+        value = value.to_s.intern
+        value == :true ? resource.property(:value).should : value
+      end
 
       def retrieve
         provider.getvalue(resource[:name])
@@ -85,16 +98,7 @@ module Puppet
 
       def insync?(is)
         return true if should == :false
-
-        # Here we disable the validation to allow us to set our @should to that of the value property.
-        # To disable validation we add a new acceptable value that matches everything. At this point, 
-        # user input to this property has passed the first round of validation. The :value peoperty has
-        # no validation, and this allows us to accept the value from it.
-        self.class.newvalue(/.*/)
-
-        # ... and here we set the value. 
-        resource[:enable] = resource.property(:value).should if should == :true
-        super        
+        super
       end
 
       def change_to_s(current_value, newvalue)

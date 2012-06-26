@@ -32,7 +32,7 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
     end
 
     def isparam?(param)
-      @resource.fail "Cannot find kernel parameter '#{@resource[:name]}' on system." unless getparam(param)
+      @resource.fail "Cannot find kernel parameter '#{param}' on system." unless getparam(param)
       true
     end
 
