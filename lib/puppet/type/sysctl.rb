@@ -89,7 +89,7 @@ module Puppet
 
       munge do |value|
         value = value.to_s.intern
-        value == :true ? resource.property(:value).should : value
+        value == :true ? resource.property(:value).should.tr("\t","\s") : value
       end
 
       def retrieve
@@ -98,6 +98,7 @@ module Puppet
 
       def insync?(is)
         return true if should == :false
+        is.tr!("\t","\s")
         super
       end
 

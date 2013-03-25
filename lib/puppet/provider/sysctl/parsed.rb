@@ -23,7 +23,7 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
     def getparam(param)
       begin
         output = sysctl(param)
-        result = output.split(/^([\w\d_\.\-]+)[\s=:]+(\S+)$/)
+        result = output.split(/^([\w\d_\.\-]+)\s*[=:]\s*(.*)$/)
         return result if result[1] == param
       rescue Puppet::ExecutionFailure
         nil
