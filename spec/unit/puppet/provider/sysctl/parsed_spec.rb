@@ -7,7 +7,7 @@ describe Puppet::Type.type(:sysctl).provider(:parsed) do
 
   before :each do
     @sysctl_class = Puppet::Type.type(:sysctl)
-    @sysctl_instance = @sysctl_class.new(:title => 'fs.file-max')
+    @sysctl_instance = @sysctl_class.new(:title => '')
     @provider_class = @sysctl_class.provider(:parsed)
     @provider_instance = @sysctl_instance.provider
     @provider_instance.stubs(:sysctl).with("fs.file-max").returns("fs.file-max = 365792")
@@ -23,15 +23,24 @@ describe Puppet::Type.type(:sysctl).provider(:parsed) do
 
   describe "when parsing a line" do
     before :each do
-      @example_line = "fs.file-max = 365792"
+      @simple_line    = "fs.file-max = 365792"
+      @multipart_line = "net.ipv4.tcp_rmem = 4096\t87380\t4194304"
     end
 
-    it "should parse the paramter name out of first field" do
-      @provider_class.parse_line(@example_line)[:name].should == 'fs.file-max'
+    it "should parse the parameter name out of first field" do
+      @provider_class.parse_line(@simple_line)[:name].should == 'fs.file-max'
     end
 
     it "should parse the value out of the second field" do
-      @provider_class.parse_line(@example_line)[:value].should == '365792'
+      @provider_class.parse_line(@simple_line)[:value].should == '365792'
+    end
+
+    it "should parse the with multipart parameter name out of the first field" do
+      @provider_class.parse_line(@multipart_line)[:name].should = 'net.ipv4.tcp_rmem'
+    end
+
+    it "should parse the multipart value out of the second feild" do
+      @provider_class.parse_line(@multipart_line)[:value].should = "4096\t87380\t4194304"
     end
   end
 
