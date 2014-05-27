@@ -5,7 +5,7 @@ sysctl_conf = "/etc/sysctl.conf"
 Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFile,
   :default_target => sysctl_conf,:filetype => :flat) do
 
-  #confine :exists => sysctl_conf  # Not sure if confining to this file is possible, by default, mac only has "/etc/sysctl.conf.default" 
+  #confine :exists => sysctl_conf  # Not sure if confining to this file is possible, by default, mac only has "/etc/sysctl.conf.default"
   commands :sysctl => "sysctl"
 
 
@@ -18,7 +18,6 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
               :fields => %w{name value},
               :separator => /\s*=\s*/,
               :joiner => '='
-
 
     def getparam(param)
       begin
@@ -53,5 +52,4 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
         raise Puppet::Error, "Could not set #{@resource[:name]} to #{value}"
       end
     end
-
 end
