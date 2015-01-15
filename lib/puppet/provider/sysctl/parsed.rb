@@ -13,7 +13,7 @@ Puppet::Type.type(:sysctl).provide(:parsed,:parent => Puppet::Provider::ParsedFi
   text_line :blank, :match => /^\s*$/
 
 
-  # define our record line so that the sysctl may be parsed
+  # define our record line so that the sysctl may be parsed.
   record_line :parsed,
               :fields => %w{name value},
               :separator => /\s*=\s*/,
